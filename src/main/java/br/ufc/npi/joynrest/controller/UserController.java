@@ -13,6 +13,7 @@ import br.ufc.npi.joynrest.config.JwtEvaluator;
 import br.ufc.npi.joynrest.model.Atividade;
 import br.ufc.npi.joynrest.model.CodigoCapturado;
 import br.ufc.npi.joynrest.model.Evento;
+import br.ufc.npi.joynrest.model.MensagemRetorno;
 import br.ufc.npi.joynrest.model.Papel;
 import br.ufc.npi.joynrest.model.ParticipacaoAtividade;
 import br.ufc.npi.joynrest.model.ParticipacaoEvento;
@@ -24,10 +25,16 @@ import br.ufc.npi.joynrest.service.CodigoService;
 import br.ufc.npi.joynrest.service.EventoService;
 import br.ufc.npi.joynrest.service.ParticipacaoAtividadeService;
 import br.ufc.npi.joynrest.service.ParticipacaoEventoService;
+import br.ufc.npi.joynrest.service.UsuarioService;
+import br.ufc.npi.joynrest.util.Constants;
+import io.jsonwebtoken.Jwts;
 
 @RestController
 public class UserController {
 
+	@Autowired
+	UsuarioService usuarioService;
+	
 	@Autowired
 	EventoService eventoService;
 	
@@ -48,14 +55,6 @@ public class UserController {
 	
 	@Autowired
 	JwtEvaluator jwtEvaluator;
-	
-	class MensagemRetorno {
-		public String mensagem;
-		
-		public MensagemRetorno(String mensagem) {
-			this.mensagem = mensagem;
-		}
-	}
 	
 	@RequestMapping(value = "/resgatarqrcode",  method = RequestMethod.POST)
 	@ResponseBody
@@ -117,6 +116,27 @@ public class UserController {
 	private void computarPontos(ParticipacaoEvento participacaoEvento, Atividade atividade){
 		participacaoEvento.setPontos(participacaoEvento.getPontos() + atividade.getPontuacao());
 		peService.atualizarParticipacaoEvento(participacaoEvento);
+	}
+	
+	@RequestMapping(value = "/testetoken",  method = RequestMethod.POST)
+	@ResponseBody
+	public MensagemRetorno testarToken(@RequestBody String token){
+        if (token != null) {
+			String email = null;
+			try {
+				email = Jwts.parser()
+						.setSigningKey(Constants.CHAVE_SECRETA)
+						.parseClaimsJws(token.replace(Constants.TOKEN_PREFIX, ""))
+						.getBody()
+						.getSubject();
+				if(usuarioService.getUsuario(email) != null)
+					return new MensagemRetorno("Token valido");
+			}catch (Exception e) {
+				return new MensagemRetorno("Token invalido");
+			}
+        }
+        
+        return new MensagemRetorno("Token invalido");
 	}
 }
 
