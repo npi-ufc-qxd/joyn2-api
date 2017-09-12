@@ -1,10 +1,13 @@
-package br.ufc.npi.joynrest.model;
+package br.ufc.npi.joynrest.response;
 
 public class ItemRanking {
 
 	private String nome;
 	private String fotoUrl;
 	private int pontos;
+	
+	public ItemRanking(){
+	}
 	
 	public ItemRanking(String nome, String fotoUrl, int pontos) {
 		this.nome = nome;

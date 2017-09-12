@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.ufc.npi.joynrest.model.Evento;
-import br.ufc.npi.joynrest.model.ItemRanking;
 import br.ufc.npi.joynrest.model.ParticipacaoEvento;
+import br.ufc.npi.joynrest.response.ItemRanking;
 import br.ufc.npi.joynrest.service.EventoService;
 
 @RestController
@@ -26,6 +26,9 @@ public class EventoController {
 	@ResponseBody
 	public List<ItemRanking> gerarRanking(@PathVariable Long eventoId){
 		Evento evento = eventoService.buscarEvento(eventoId);
+		
+		//if(evento == null) return new MensagemRetorno(Constants.STATUS_BAD_REQUEST, "Evento invalido");
+		
 		List<ItemRanking> ranking = new ArrayList<>();
 		for(ParticipacaoEvento pe : evento.getParticipantes()){
 			ranking.add(new ItemRanking(pe.getUsuario().getNome(), pe.getUsuario().getFoto64(), pe.getPontos()));
