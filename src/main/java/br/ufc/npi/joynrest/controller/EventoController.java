@@ -31,7 +31,7 @@ public class EventoController {
 		
 		List<ItemRanking> ranking = new ArrayList<>();
 		for(ParticipacaoEvento pe : evento.getParticipantes()){
-			ranking.add(new ItemRanking(pe.getUsuario().getNome(), pe.getUsuario().getFoto64(), pe.getPontos()));
+			ranking.add(new ItemRanking(pe.getUsuario().getNome(), pe.getPontos()));
 		}
 		
 		Collections.sort(ranking, new Comparator<ItemRanking>() {
