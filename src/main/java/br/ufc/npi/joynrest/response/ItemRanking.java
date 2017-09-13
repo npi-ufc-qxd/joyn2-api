@@ -3,15 +3,13 @@ package br.ufc.npi.joynrest.response;
 public class ItemRanking {
 
 	private String nome;
-	private String fotoUrl;
 	private int pontos;
 	
 	public ItemRanking(){
 	}
 	
-	public ItemRanking(String nome, String fotoUrl, int pontos) {
+	public ItemRanking(String nome, int pontos) {
 		this.nome = nome;
-		this.fotoUrl = fotoUrl;
 		this.pontos = pontos;
 	}
 
@@ -21,14 +19,6 @@ public class ItemRanking {
 
 	public void setNome(String nome) {
 		this.nome = nome;
-	}
-
-	public String getFotoUrl() {
-		return fotoUrl;
-	}
-
-	public void setFotoUrl(String fotoUrl) {
-		this.fotoUrl = fotoUrl;
 	}
 
 	public int getPontos() {
