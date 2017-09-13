@@ -44,6 +44,9 @@ public class EventoController {
 	        }
 	    });
 		
+		for(int i = 0; i < ranking.size(); i++)
+			ranking.get(i).setColocacao(i+1);
+		
 		return ranking;
 	}
 }

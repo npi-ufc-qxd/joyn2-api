@@ -2,6 +2,7 @@ package br.ufc.npi.joynrest.response;
 
 public class ItemRanking {
 
+	private int colocacao;
 	private String nome;
 	private int pontos;
 	
@@ -11,6 +12,14 @@ public class ItemRanking {
 	public ItemRanking(String nome, int pontos) {
 		this.nome = nome;
 		this.pontos = pontos;
+	}
+
+	public int getColocacao() {
+		return colocacao;
+	}
+
+	public void setColocacao(int colocacao) {
+		this.colocacao = colocacao;
 	}
 
 	public String getNome() {
