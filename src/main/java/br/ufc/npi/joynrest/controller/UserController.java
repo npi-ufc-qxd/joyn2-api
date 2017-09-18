@@ -33,6 +33,7 @@ import br.ufc.npi.joynrest.service.ParticipacaoEventoService;
 import br.ufc.npi.joynrest.service.UsuarioService;
 import br.ufc.npi.joynrest.util.Constants;
 import io.jsonwebtoken.Jwts;
+import io.undertow.util.BadRequestException;
 
 @RestController
 public class UserController {
@@ -66,36 +67,26 @@ public class UserController {
 	
 	@RequestMapping(path = "/cadastrar",  method = RequestMethod.POST)
 	public MensagemRetorno cadastrar(@RequestBody Usuario usuario) {
-		try{
-			usuario.setPapel(Papel.USUARIO);
-			Usuario userBanco = usuarioService.salvarUsuario(usuario);
-					
-			Convite convite = conviteService.getConvite(usuario.getEmail());
-			if(convite != null){
-				Evento eventoConvidado = eventoService.buscarEvento(convite.getIdEvento());
-				ParticipacaoEvento pe = new ParticipacaoEvento(userBanco, eventoConvidado, Papel.ORGANIZADOR, true);
-				peService.addParticipacaoEvento(pe);
-			}
-		}catch (Exception e) {
-			return new MensagemRetorno(Constants.STATUS_BAD_REQUEST, "Erro: " + e.getMessage());
+		usuario.setPapel(Papel.USUARIO);
+		Usuario userBanco = usuarioService.salvarUsuario(usuario);
+				
+		Convite convite = conviteService.getConvite(usuario.getEmail());
+		if(convite != null){
+			Evento eventoConvidado = eventoService.buscarEvento(convite.getIdEvento());
+			ParticipacaoEvento pe = new ParticipacaoEvento(userBanco, eventoConvidado, Papel.ORGANIZADOR, true);
+			peService.addParticipacaoEvento(pe);
 		}
 
-		return new MensagemRetorno(Constants.STATUS_OK, "Usuario cadastrado");
+		return new MensagemRetorno("Usuario cadastrado");
 
 	}
 	
 	@RequestMapping(value = "/resgatarqrcode",  method = RequestMethod.POST)
 	@ResponseBody
-	public MensagemRetorno resgatarQrCode(@RequestBody QrCode qrcode) throws ServletException {
+	public MensagemRetorno resgatarQrCode(@RequestBody QrCode qrcode) throws BadRequestException, ServletException {
 		String codigo = qrcode.getCodigo();
 		Atividade atividade = atividadeService.getAtividade(codigo);
-		if(atividade == null) 
-			return new MensagemRetorno(Constants.STATUS_BAD_REQUEST, "Atividade invalida");
-		
 		Evento evento = atividade.getEvento();
-		if(evento == null) 
-			return new MensagemRetorno(Constants.STATUS_BAD_REQUEST, "Evento invalido");
-		
 		Usuario usuarioLogado = jwtEvaluator.usuarioToken();
 		ParticipacaoAtividade participacaoAtividade = null;
 		
@@ -105,31 +96,31 @@ public class UserController {
 			participacaoAtividade = paService.getParticipacaoAtividade(usuarioLogado.getId(), atividade.getId());
 		
 		for(CodigoCapturado c : participacaoAtividade.getCodigos()){
-			if(c.getCodigo().equals(codigo)) return new MensagemRetorno(Constants.STATUS_QRCODE_PROCESSADO, "Esse codigo ja foi resgatado");
+			if(c.getCodigo().equals(codigo)) return new MensagemRetorno("Esse codigo ja foi resgatado");
 		}
 		
 		ParticipacaoEvento participacaoEvento = peService.getParticipacaoEvento(usuarioLogado.getId(), evento.getId());
 		if(atividade.getTipo() == TiposAtividades.CHECKIN && codigo.equals(atividade.getCodeCheckin())){
 			addCodigoCapturado(codigo, participacaoAtividade);
 			computarPontos(participacaoEvento, atividade);
-			return new MensagemRetorno(Constants.STATUS_OK, "Codigo resgatado, " + atividade.getPontuacao() + " pontos resgatados");
+			return new MensagemRetorno("Codigo resgatado, " + atividade.getPontuacao() + " pontos resgatados");
 		} else if(atividade.getTipo() == TiposAtividades.CHECKIN_CHECKOUT){
 			if(codigo.equals(atividade.getCodeCheckin())){
 				addCodigoCapturado(codigo, participacaoAtividade);
-				return new MensagemRetorno(Constants.STATUS_OK, "Codigo resgatado. Esperando codigo de checkout");
+				return new MensagemRetorno("Codigo resgatado. Esperando codigo de checkout");
 			} else if(codigo.equals(atividade.getCodeCheckout())){
 				for(CodigoCapturado c : participacaoAtividade.getCodigos()){
 					if(c.getCodigo().equals(atividade.getCodeCheckin())){
 						computarPontos(participacaoEvento, atividade);
 						addCodigoCapturado(codigo, participacaoAtividade);
-						return new MensagemRetorno(Constants.STATUS_OK, "Codigo resgatado, " + atividade.getPontuacao() + " pontos resgatados");
+						return new MensagemRetorno("Codigo resgatado, " + atividade.getPontuacao() + " pontos resgatados");
 					}
 						
 				}
 			}
 		}
 		
-		return new MensagemRetorno(Constants.STATUS_BAD_REQUEST, "Codigo invalido");
+		throw new BadRequestException("Codigo invalido");
 		
 	}
 	
@@ -152,41 +143,25 @@ public class UserController {
 	public MensagemRetorno testarToken(@RequestBody AuthToken authToken){
 		String token = authToken.getToken();
         if (token != null) {
-			String email = null;
-			try {
-				email = Jwts.parser()
+			String email = Jwts.parser()
 						.setSigningKey(Constants.CHAVE_SECRETA)
 						.parseClaimsJws(token.replace(Constants.TOKEN_PREFIX, ""))
 						.getBody()
 						.getSubject();
 				if(usuarioService.getUsuario(email) != null)
-					return new MensagemRetorno(Constants.STATUS_OK,"Token valido");
-			}catch (Exception e) {
-				return new MensagemRetorno(Constants.STAUTS_TOKEN_INVALIDO, "Token invalido");
-			}
+					return new MensagemRetorno("Token valido");
         }
         
-        return new MensagemRetorno(Constants.STAUTS_TOKEN_INVALIDO, "Token invalido");
+        return new MensagemRetorno("Token invalido");
 	}
 	
 	@RequestMapping(value = "/pontos/{eventoId}")
 	@ResponseBody
-	public MensagemRetorno pontos(@PathVariable Long eventoId){
-		Usuario usuarioLogado;
-		try {
-			usuarioLogado = jwtEvaluator.usuarioToken();
-		} catch (ServletException e) {
-			return new MensagemRetorno(Constants.STATUS_BAD_REQUEST, "Erro:" + e.getMessage());
-		}
-		
-		if(usuarioLogado == null)
-			return new MensagemRetorno(Constants.STATUS_BAD_REQUEST, "Usuario invalido");
-		
+	public MensagemRetorno pontos(@PathVariable Long eventoId) throws ServletException{
+		Usuario usuarioLogado = jwtEvaluator.usuarioToken();
 		ParticipacaoEvento peEvento = peService.getParticipacaoEvento(usuarioLogado.getId(), eventoId);
-		if(peEvento == null)
-			return new MensagemRetorno(Constants.STATUS_BAD_REQUEST, "Evento invalido");
-		else
-			return new MensagemRetorno(Constants.STATUS_OK, String.valueOf(peEvento.getPontos()));
+		
+		return new MensagemRetorno(String.valueOf(peEvento.getPontos()));
 	}
 }
 

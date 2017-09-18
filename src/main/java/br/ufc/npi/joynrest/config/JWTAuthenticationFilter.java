@@ -17,7 +17,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.ufc.npi.joynrest.response.MensagemRetorno;
 import br.ufc.npi.joynrest.response.TokenException;
-import br.ufc.npi.joynrest.util.Constants;
 
 public class JWTAuthenticationFilter extends GenericFilterBean {
 
@@ -32,11 +31,11 @@ public class JWTAuthenticationFilter extends GenericFilterBean {
 			filterChain.doFilter(request, response);
 		}catch (TokenException e) {
 			ObjectMapper mapper = new ObjectMapper();
-			String json =  mapper.writeValueAsString(new MensagemRetorno(Constants.STAUTS_TOKEN_INVALIDO, "Token invalido"));
+			String json =  mapper.writeValueAsString(new MensagemRetorno("Token invalido"));
 			HttpServletResponse res = (HttpServletResponse) response;
 			res.reset();
 			res.setHeader("Content-Type", "application/json;charset=UTF-8");
-			res.setStatus(Constants.STAUTS_TOKEN_INVALIDO);
+			res.setStatus(400);
 			res.getWriter().write(json);
 		}
 		
