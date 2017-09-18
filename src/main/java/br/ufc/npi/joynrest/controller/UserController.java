@@ -3,6 +3,7 @@ package br.ufc.npi.joynrest.controller;
 import javax.servlet.ServletException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import br.ufc.npi.joynrest.config.JwtEvaluator;
 import br.ufc.npi.joynrest.model.Atividade;
 import br.ufc.npi.joynrest.model.CodigoCapturado;
+import br.ufc.npi.joynrest.model.Convite;
 import br.ufc.npi.joynrest.model.Evento;
 import br.ufc.npi.joynrest.model.Papel;
 import br.ufc.npi.joynrest.model.ParticipacaoAtividade;
@@ -24,6 +26,7 @@ import br.ufc.npi.joynrest.response.QrCode;
 import br.ufc.npi.joynrest.service.AtividadeService;
 import br.ufc.npi.joynrest.service.CodigoCapturadoService;
 import br.ufc.npi.joynrest.service.CodigoService;
+import br.ufc.npi.joynrest.service.ConviteService;
 import br.ufc.npi.joynrest.service.EventoService;
 import br.ufc.npi.joynrest.service.ParticipacaoAtividadeService;
 import br.ufc.npi.joynrest.service.ParticipacaoEventoService;
@@ -56,7 +59,30 @@ public class UserController {
 	CodigoService codigoService;
 	
 	@Autowired
+	ConviteService conviteService;
+	
+	@Autowired
 	JwtEvaluator jwtEvaluator;
+	
+	@RequestMapping(path = "/cadastrar",  method = RequestMethod.POST)
+	public MensagemRetorno cadastrar(@RequestBody Usuario usuario) {
+		try{
+			usuario.setPapel(Papel.USUARIO);
+			Usuario userBanco = usuarioService.salvarUsuario(usuario);
+					
+			Convite convite = conviteService.getConvite(usuario.getEmail());
+			if(convite != null){
+				Evento eventoConvidado = eventoService.buscarEvento(convite.getIdEvento());
+				ParticipacaoEvento pe = new ParticipacaoEvento(userBanco, eventoConvidado, Papel.ORGANIZADOR, true);
+				peService.addParticipacaoEvento(pe);
+			}
+		}catch (Exception e) {
+			return new MensagemRetorno(Constants.STATUS_BAD_REQUEST, "Erro: " + e.getMessage());
+		}
+
+		return new MensagemRetorno(Constants.STATUS_OK, "Usuario cadastrado");
+
+	}
 	
 	@RequestMapping(value = "/resgatarqrcode",  method = RequestMethod.POST)
 	@ResponseBody
@@ -141,6 +167,26 @@ public class UserController {
         }
         
         return new MensagemRetorno(Constants.STAUTS_TOKEN_INVALIDO, "Token invalido");
+	}
+	
+	@RequestMapping(value = "/pontos/{eventoId}")
+	@ResponseBody
+	public MensagemRetorno pontos(@PathVariable Long eventoId){
+		Usuario usuarioLogado;
+		try {
+			usuarioLogado = jwtEvaluator.usuarioToken();
+		} catch (ServletException e) {
+			return new MensagemRetorno(Constants.STATUS_BAD_REQUEST, "Erro:" + e.getMessage());
+		}
+		
+		if(usuarioLogado == null)
+			return new MensagemRetorno(Constants.STATUS_BAD_REQUEST, "Usuario invalido");
+		
+		ParticipacaoEvento peEvento = peService.getParticipacaoEvento(usuarioLogado.getId(), eventoId);
+		if(peEvento == null)
+			return new MensagemRetorno(Constants.STATUS_BAD_REQUEST, "Evento invalido");
+		else
+			return new MensagemRetorno(Constants.STATUS_OK, String.valueOf(peEvento.getPontos()));
 	}
 }
 
