@@ -24,6 +24,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			.antMatchers("/home").permitAll()
 			.antMatchers(HttpMethod.POST, "/login").permitAll()
 			.antMatchers(HttpMethod.POST, "/testetoken").permitAll()
+			.antMatchers(HttpMethod.POST, "/cadastrar").permitAll()
 			.anyRequest().authenticated()
 			.and()
 			

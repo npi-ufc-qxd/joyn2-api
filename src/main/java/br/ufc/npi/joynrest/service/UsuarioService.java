@@ -13,6 +13,17 @@ public class UsuarioService {
 	@Autowired
 	private UsuarioRestRepository usuarioRepository;
 	
+	private BCryptPasswordEncoder bCryptPasswordEncoder;
+	
+	public UsuarioService() {
+		bCryptPasswordEncoder = new BCryptPasswordEncoder();
+	}
+	
+	public Usuario salvarUsuario(Usuario usuario){
+		usuario.setSenha(bCryptPasswordEncoder.encode(usuario.getSenha()));
+		return usuarioRepository.save(usuario);
+	}
+	
 	public boolean logar(String email, String senha){
 		Usuario userBanco = usuarioRepository.findByEmail(email);
 		if(userBanco != null && new BCryptPasswordEncoder().matches(senha, userBanco.getSenha())) return true;

@@ -17,4 +17,6 @@ public interface ConviteRepository extends JpaRepository<Convite, Long>{
 	@Override
 	@PreAuthorize("false")
 	void delete(@Param("convite") Convite convite);
+	
+	public Convite findByEmail(String email);
 }
