@@ -27,8 +27,6 @@ public class EventoController {
 	public List<ItemRanking> gerarRanking(@PathVariable Long eventoId){
 		Evento evento = eventoService.buscarEvento(eventoId);
 		
-		//if(evento == null) return new MensagemRetorno(Constants.STATUS_BAD_REQUEST, "Evento invalido");
-		
 		List<ItemRanking> ranking = new ArrayList<>();
 		for(ParticipacaoEvento pe : evento.getParticipantes()){
 			ranking.add(new ItemRanking(pe.getUsuario().getNome(), pe.getPontos()));

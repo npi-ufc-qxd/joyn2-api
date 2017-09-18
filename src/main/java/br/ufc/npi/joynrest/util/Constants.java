@@ -6,10 +6,4 @@ public class Constants {
 	public static final String HEADER_STRING = "Authorization";
 	public static final String TOKEN_PREFIX = "Joyn";
 	public static final String CHAVE_SECRETA = "secretkeyjoyn";
-	
-	//Codigo status
-	public static final int STATUS_OK = 200;
-	public static final int STATUS_BAD_REQUEST = 400;
-	public static final int STATUS_QRCODE_PROCESSADO = 208;
-	public static final int STAUTS_TOKEN_INVALIDO = 498;
 }
