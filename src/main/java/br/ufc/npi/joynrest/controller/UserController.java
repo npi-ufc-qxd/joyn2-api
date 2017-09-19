@@ -66,11 +66,12 @@ public class UserController {
 	@Autowired
 	JwtEvaluator jwtEvaluator;
 	
-	@RequestMapping(value = "/usuario")
+	@RequestMapping(value = "/usuario/{eventoId}")
 	@ResponseBody
-	public UsuarioData usuario() throws ServletException{
+	public UsuarioData usuario(@PathVariable Long eventoId) throws ServletException{
 		Usuario u = jwtEvaluator.usuarioToken();
-		return new UsuarioData(u.getId(), u.getNome(), u.getEmail(), u.getFoto64(), u.getKeyFacebook(), u.getPapel());
+		ParticipacaoEvento peEvento = peService.getParticipacaoEvento(u.getId(), eventoId);
+		return new UsuarioData(u.getId(), u.getNome(), u.getEmail(), u.getKeyFacebook(), u.getPapel(), peEvento.getPontos());
 	}
 	
 	@RequestMapping(path = "/cadastrar",  method = RequestMethod.POST)
@@ -163,14 +164,6 @@ public class UserController {
         return new MensagemRetorno("Token invalido");
 	}
 	
-	@RequestMapping(value = "/pontos/{eventoId}")
-	@ResponseBody
-	public MensagemRetorno pontos(@PathVariable Long eventoId) throws ServletException{
-		Usuario usuarioLogado = jwtEvaluator.usuarioToken();
-		ParticipacaoEvento peEvento = peService.getParticipacaoEvento(usuarioLogado.getId(), eventoId);
-		
-		return new MensagemRetorno(String.valueOf(peEvento.getPontos()));
-	}
 }
 
 
