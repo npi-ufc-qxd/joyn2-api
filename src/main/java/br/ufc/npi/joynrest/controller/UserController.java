@@ -23,6 +23,7 @@ import br.ufc.npi.joynrest.model.Usuario;
 import br.ufc.npi.joynrest.response.AuthToken;
 import br.ufc.npi.joynrest.response.MensagemRetorno;
 import br.ufc.npi.joynrest.response.QrCode;
+import br.ufc.npi.joynrest.response.UsuarioData;
 import br.ufc.npi.joynrest.service.AtividadeService;
 import br.ufc.npi.joynrest.service.CodigoCapturadoService;
 import br.ufc.npi.joynrest.service.CodigoService;
@@ -64,6 +65,13 @@ public class UserController {
 	
 	@Autowired
 	JwtEvaluator jwtEvaluator;
+	
+	@RequestMapping(value = "/usuario")
+	@ResponseBody
+	public UsuarioData usuario() throws ServletException{
+		Usuario u = jwtEvaluator.usuarioToken();
+		return new UsuarioData(u.getId(), u.getNome(), u.getEmail(), u.getFoto64(), u.getKeyFacebook(), u.getPapel());
+	}
 	
 	@RequestMapping(path = "/cadastrar",  method = RequestMethod.POST)
 	public MensagemRetorno cadastrar(@RequestBody Usuario usuario) {
