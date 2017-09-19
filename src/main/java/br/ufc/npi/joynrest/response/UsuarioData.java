@@ -7,21 +7,21 @@ public class UsuarioData {
 	private Long id;
 	private String nome;
 	private String email;
-	private String foto64;
 	private String keyFacebook;
 	private Papel papel;
+	private Integer pontos;
 	
 	public UsuarioData(){
 	}
 	
-	public UsuarioData(Long id, String nome, String email, String foto64, String keyFacebook, Papel papel) {
+	public UsuarioData(Long id, String nome, String email, String keyFacebook, Papel papel, Integer pontos) {
 		super();
 		this.id = id;
 		this.nome = nome;
 		this.email = email;
-		this.foto64 = foto64;
 		this.keyFacebook = keyFacebook;
 		this.papel = papel;
+		this.pontos = pontos;
 	}
 	
 	public Long getId() {
@@ -42,12 +42,6 @@ public class UsuarioData {
 	public void setEmail(String email) {
 		this.email = email;
 	}
-	public String getFoto64() {
-		return foto64;
-	}
-	public void setFoto64(String foto64) {
-		this.foto64 = foto64;
-	}
 	public String getKeyFacebook() {
 		return keyFacebook;
 	}
@@ -59,6 +53,12 @@ public class UsuarioData {
 	}
 	public void setPapel(Papel papel) {
 		this.papel = papel;
+	}
+	public Integer getPontos() {
+		return pontos;
+	}
+	public void setPontos(Integer pontos) {
+		this.pontos = pontos;
 	}
 
 }
