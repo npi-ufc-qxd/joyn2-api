@@ -95,6 +95,10 @@ public class UserController {
 	public MensagemRetorno resgatarQrCode(@RequestBody QrCode qrcode) throws BadRequestException, ServletException {
 		String codigo = qrcode.getCodigo();
 		Atividade atividade = atividadeService.getAtividade(codigo);
+		
+		if(atividade == null)
+			return new MensagemRetorno("Codigo invalido");
+		
 		Evento evento = atividade.getEvento();
 		Usuario usuarioLogado = jwtEvaluator.usuarioToken();
 		ParticipacaoAtividade participacaoAtividade = null;
