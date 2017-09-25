@@ -2,14 +2,14 @@ package br.ufc.npi.joynrest.response;
 
 public class MensagemResgate {
 	private String mensagem;
-	private int pontuacao;
+	private int pontos;
 	
 	public MensagemResgate(){	
 	}
 	
-	public MensagemResgate(String mensagem, int pontuacao) {
+	public MensagemResgate(String mensagem, int pontos) {
 		this.mensagem = mensagem;
-		this.pontuacao = pontuacao;
+		this.pontos = pontos;
 	}
 
 	public String getMensagem() {
@@ -20,12 +20,12 @@ public class MensagemResgate {
 		this.mensagem = mensagem;
 	}
 
-	public int getPontuacao() {
-		return pontuacao;
+	public int getPontos() {
+		return pontos;
 	}
 
-	public void setPontuacao(int pontuacao) {
-		this.pontuacao = pontuacao;
+	public void setPontos(int pontos) {
+		this.pontos = pontos;
 	}
 
 }
