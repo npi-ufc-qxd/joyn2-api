@@ -21,6 +21,7 @@ import br.ufc.npi.joynrest.model.ParticipacaoEvento;
 import br.ufc.npi.joynrest.model.TiposAtividades;
 import br.ufc.npi.joynrest.model.Usuario;
 import br.ufc.npi.joynrest.response.AuthToken;
+import br.ufc.npi.joynrest.response.MensagemResgate;
 import br.ufc.npi.joynrest.response.MensagemRetorno;
 import br.ufc.npi.joynrest.response.QrCode;
 import br.ufc.npi.joynrest.response.UsuarioData;
@@ -92,13 +93,9 @@ public class UserController {
 	
 	@RequestMapping(value = "/resgatarqrcode",  method = RequestMethod.POST)
 	@ResponseBody
-	public MensagemRetorno resgatarQrCode(@RequestBody QrCode qrcode) throws BadRequestException, ServletException {
+	public MensagemResgate resgatarQrCode(@RequestBody QrCode qrcode) throws BadRequestException, ServletException {
 		String codigo = qrcode.getCodigo();
 		Atividade atividade = atividadeService.getAtividade(codigo);
-		
-		if(atividade == null)
-			return new MensagemRetorno("Codigo invalido");
-		
 		Evento evento = atividade.getEvento();
 		Usuario usuarioLogado = jwtEvaluator.usuarioToken();
 		ParticipacaoAtividade participacaoAtividade = null;
@@ -108,25 +105,26 @@ public class UserController {
 		else
 			participacaoAtividade = paService.getParticipacaoAtividade(usuarioLogado.getId(), atividade.getId());
 		
+		ParticipacaoEvento participacaoEvento = peService.getParticipacaoEvento(usuarioLogado.getId(), evento.getId());
+		
 		for(CodigoCapturado c : participacaoAtividade.getCodigos()){
-			if(c.getCodigo().equals(codigo)) return new MensagemRetorno("Esse codigo ja foi resgatado");
+			if(c.getCodigo().equals(codigo)) return new MensagemResgate("Esse codigo ja foi resgatado", participacaoEvento.getPontos());
 		}
 		
-		ParticipacaoEvento participacaoEvento = peService.getParticipacaoEvento(usuarioLogado.getId(), evento.getId());
 		if(atividade.getTipo() == TiposAtividades.CHECKIN && codigo.equals(atividade.getCodeCheckin())){
 			addCodigoCapturado(codigo, participacaoAtividade);
 			computarPontos(participacaoEvento, atividade);
-			return new MensagemRetorno("Codigo resgatado, " + atividade.getPontuacao() + " pontos resgatados");
+			return new MensagemResgate("Codigo resgatado, " + atividade.getPontuacao() + " pontos resgatados", participacaoEvento.getPontos());
 		} else if(atividade.getTipo() == TiposAtividades.CHECKIN_CHECKOUT){
 			if(codigo.equals(atividade.getCodeCheckin())){
 				addCodigoCapturado(codigo, participacaoAtividade);
-				return new MensagemRetorno("Codigo resgatado. Esperando codigo de checkout");
+				return new MensagemResgate("Codigo resgatado. Esperando codigo de checkout", participacaoEvento.getPontos());
 			} else if(codigo.equals(atividade.getCodeCheckout())){
 				for(CodigoCapturado c : participacaoAtividade.getCodigos()){
 					if(c.getCodigo().equals(atividade.getCodeCheckin())){
 						computarPontos(participacaoEvento, atividade);
 						addCodigoCapturado(codigo, participacaoAtividade);
-						return new MensagemRetorno("Codigo resgatado, " + atividade.getPontuacao() + " pontos resgatados");
+						return new MensagemResgate("Codigo resgatado, " + atividade.getPontuacao() + " pontos resgatados", participacaoEvento.getPontos());
 					}
 						
 				}
