@@ -151,7 +151,7 @@ public class UserController {
 	
 	@RequestMapping(value = "/testetoken",  method = RequestMethod.POST)
 	@ResponseBody
-	public MensagemRetorno testarToken(@RequestBody AuthToken authToken){
+	public MensagemRetorno testarToken(@RequestBody AuthToken authToken) throws BadRequestException{
 		String token = authToken.getToken();
         if (token != null) {
 			String email = Jwts.parser()
@@ -163,7 +163,7 @@ public class UserController {
 					return new MensagemRetorno("Token valido");
         }
         
-        return new MensagemRetorno("Token invalido");
+        throw new BadRequestException("Token invalido");
 	}
 	
 }
