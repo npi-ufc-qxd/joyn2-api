@@ -72,7 +72,7 @@ public class UserController {
 	public UsuarioData usuario(@PathVariable Long eventoId) throws ServletException{
 		Usuario u = jwtEvaluator.usuarioToken();
 		ParticipacaoEvento peEvento = peService.getParticipacaoEvento(u.getId(), eventoId);
-		return new UsuarioData(u.getId(), u.getNome(), u.getEmail(), u.getKeyFacebook(), u.getPapel(), peEvento.getPontos());
+		return new UsuarioData(u.getId(), u.getNome(), u.getEmail(), u.getKeyFacebook(), u.getPapel(), peEvento!=null?peEvento.getPontos():0);
 	}
 	
 	@RequestMapping(path = "/cadastrar",  method = RequestMethod.POST)
