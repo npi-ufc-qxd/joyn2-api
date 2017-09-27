@@ -1,16 +1,22 @@
 package br.ufc.npi.joynrest.controller;
 
+import java.util.Collections;
+import java.util.Date;
+
 import javax.servlet.ServletException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-
 import br.ufc.npi.joynrest.config.JwtEvaluator;
+import br.ufc.npi.joynrest.model.AccountCredentials;
 import br.ufc.npi.joynrest.model.Atividade;
 import br.ufc.npi.joynrest.model.CodigoCapturado;
 import br.ufc.npi.joynrest.model.Convite;
@@ -35,6 +41,7 @@ import br.ufc.npi.joynrest.service.ParticipacaoEventoService;
 import br.ufc.npi.joynrest.service.UsuarioService;
 import br.ufc.npi.joynrest.util.Constants;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.undertow.util.BadRequestException;
 
 @RestController
@@ -67,12 +74,35 @@ public class UserController {
 	@Autowired
 	JwtEvaluator jwtEvaluator;
 	
+	@Autowired
+	AuthenticationManager authenticationManager;
+	
+	private static final long EXPIRATION_TIME = 1000 * Constants.TOKEN_EXPIRAR_MINUTOS;
+	
 	@RequestMapping(value = "/usuario/{eventoId}")
 	@ResponseBody
 	public UsuarioData usuario(@PathVariable Long eventoId) throws ServletException{
 		Usuario u = jwtEvaluator.usuarioToken();
 		ParticipacaoEvento peEvento = peService.getParticipacaoEvento(u.getId(), eventoId);
 		return new UsuarioData(u.getId(), u.getNome(), u.getEmail(), u.getKeyFacebook(), u.getPapel(), peEvento!=null?peEvento.getPontos():0);
+	}
+	
+	@RequestMapping(value = "/logar")
+	@ResponseBody
+	public AuthToken logar(@RequestBody AccountCredentials usuario){
+		Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+				usuario.getUsername(), 
+				usuario.getPassword(), 
+				Collections.emptyList()
+		));
+		String JWT = Jwts.builder()
+				.setSubject(authentication.getName())
+				.setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+				.signWith(SignatureAlgorithm.HS512, Constants.CHAVE_SECRETA)
+				.compact();
+		
+		return new AuthToken(Constants.TOKEN_PREFIX + " " + JWT);
+		
 	}
 	
 	@RequestMapping(path = "/cadastrar",  method = RequestMethod.POST)
