@@ -3,15 +3,18 @@ package br.ufc.npi.joynrest.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Repository;
 
 import br.ufc.npi.joynrest.model.Atividade;
 
 import java.lang.Long;
 import java.lang.String;
 
-@RepositoryRestResource(collectionResourceRel = "atividade", path = "atividade")
+import javax.transaction.Transactional;
+
+@Repository
+@Transactional
 public interface AtividadeRepository extends JpaRepository<Atividade, Long>{
 	
 	@Override

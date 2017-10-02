@@ -21,6 +21,7 @@ public class JwtEvaluator {
 	
 	public Usuario usuarioToken() throws ServletException{
 		String token = request.getHeader(Constants.HEADER_STRING);
+		System.out.println("--jwtEvaluator-- Token: " + token);
         if (token != null) {
 			String email = null;
 			try {
