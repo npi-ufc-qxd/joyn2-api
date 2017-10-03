@@ -14,7 +14,7 @@ import br.ufc.npi.joynrest.model.CodigoCapturado;
 public interface CodigoCapturadoRepository extends JpaRepository<CodigoCapturado, Long>{
 
 	@Override
-	@PreAuthorize("#codigoCapturado?.codigo != null and #codigoCapturado?.atividade?.usuario?.id == @jwtEvaluator.usuarioToken()?.id")
+	@PreAuthorize("#codigoCapturado?.codigo != null")
 	<S extends CodigoCapturado> S save(@Param("codigoCapturado") S codigoCapturado);
 
 	@Override
