@@ -1,4 +1,4 @@
-package br.ufc.npi.joynrest.response;
+package br.ufc.npi.joynrest.exceptions;
 
 public class TokenException extends Exception {
 
