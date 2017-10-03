@@ -6,7 +6,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import br.ufc.npi.joynrest.response.TokenException;
+
+import br.ufc.npi.joynrest.exceptions.TokenException;
 import br.ufc.npi.joynrest.util.Constants;
 import io.jsonwebtoken.Jwts;
 

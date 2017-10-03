@@ -15,8 +15,8 @@ import org.springframework.web.filter.GenericFilterBean;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import br.ufc.npi.joynrest.exceptions.TokenException;
 import br.ufc.npi.joynrest.response.MensagemRetorno;
-import br.ufc.npi.joynrest.response.TokenException;
 
 public class JWTAuthenticationFilter extends GenericFilterBean {
 

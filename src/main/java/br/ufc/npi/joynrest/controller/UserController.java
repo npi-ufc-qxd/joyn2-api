@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import br.ufc.npi.joynrest.config.JwtEvaluator;
+import br.ufc.npi.joynrest.exceptions.CapturaException;
 import br.ufc.npi.joynrest.model.AccountCredentials;
 import br.ufc.npi.joynrest.model.Atividade;
 import br.ufc.npi.joynrest.model.CodigoCapturado;
@@ -123,7 +124,7 @@ public class UserController {
 	
 	@RequestMapping(value = "/resgatarqrcode",  method = RequestMethod.POST)
 	@ResponseBody
-	public MensagemResgate resgatarQrCode(@RequestBody QrCode qrcode) throws BadRequestException, ServletException {
+	public MensagemResgate resgatarQrCode(@RequestBody QrCode qrcode) throws BadRequestException, ServletException, CapturaException {
 		String codigo = qrcode.getCodigo();
 		Atividade atividade = atividadeService.getAtividade(codigo);
 		Evento evento = atividade.getEvento();
@@ -155,9 +156,9 @@ public class UserController {
 						computarPontos(participacaoEvento, atividade);
 						addCodigoCapturado(codigo, participacaoAtividade);
 						return new MensagemResgate("Codigo resgatado, " + atividade.getPontuacao() + " pontos resgatados", participacaoEvento.getPontos());
-					}
-						
+					}		
 				}
+				throw new CapturaException("Capture o codigo de checkin antes do codigo de checkout");
 			}
 		}
 		
