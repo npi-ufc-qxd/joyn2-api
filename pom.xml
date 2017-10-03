@@ -6,7 +6,7 @@
 	<groupId>br.ufc.npi.joynrest</groupId>
 	<artifactId>joynrest</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>jar</packaging>
+	<packaging>war</packaging>
 
 	<name>joynrest</name>
 	<description>Demo project for Spring Boot</description>
