@@ -34,6 +34,10 @@ public class UsuarioService {
 		return usuarioRepository.findByEmail(email);
 	}
 	
+	public Usuario getUsuarioKeyFacebook(String keyFacebook){
+		return usuarioRepository.findByKeyFacebook(keyFacebook);
+	}
+	
 	public Usuario atualizaUsuario(Usuario usuario){
 		return usuarioRepository.save(usuario);
 	}
