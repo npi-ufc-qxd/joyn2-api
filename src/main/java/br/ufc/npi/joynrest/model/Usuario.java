@@ -59,6 +59,18 @@ public class Usuario implements UserDetails{
 		participacaoAtividade = new ArrayList<>();
 	}
 
+	public Usuario(String nome, String foto64, String keyFacebook, String email, String senha, Papel papel) {
+		this();
+		this.nome = nome;
+		this.foto64 = foto64;
+		this.keyFacebook = keyFacebook;
+		this.email = email;
+		this.senha = senha;
+		this.papel = papel;
+	}
+
+
+
 	public Long getId() {
 		return id;
 	}

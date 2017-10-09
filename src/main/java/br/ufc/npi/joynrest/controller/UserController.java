@@ -3,6 +3,7 @@ package br.ufc.npi.joynrest.controller;
 import java.util.Collections;
 import java.util.Date;
 
+import javax.security.sasl.AuthenticationException;
 import javax.servlet.ServletException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import br.ufc.npi.joynrest.config.JwtEvaluator;
 import br.ufc.npi.joynrest.exceptions.CapturaException;
+import br.ufc.npi.joynrest.exceptions.TokenException;
 import br.ufc.npi.joynrest.model.AccountCredentials;
 import br.ufc.npi.joynrest.model.Atividade;
 import br.ufc.npi.joynrest.model.CodigoCapturado;
@@ -28,6 +30,7 @@ import br.ufc.npi.joynrest.model.ParticipacaoEvento;
 import br.ufc.npi.joynrest.model.TiposAtividades;
 import br.ufc.npi.joynrest.model.Usuario;
 import br.ufc.npi.joynrest.response.AuthToken;
+import br.ufc.npi.joynrest.response.FacebookDados;
 import br.ufc.npi.joynrest.response.MensagemResgate;
 import br.ufc.npi.joynrest.response.MensagemRetorno;
 import br.ufc.npi.joynrest.response.QrCode;
@@ -110,7 +113,6 @@ public class UserController {
 	public MensagemRetorno cadastrar(@RequestBody Usuario usuario) {
 		usuario.setPapel(Papel.USUARIO);
 		Usuario userBanco = usuarioService.salvarUsuario(usuario);
-				
 		Convite convite = conviteService.getConvite(usuario.getEmail());
 		if(convite != null){
 			Evento eventoConvidado = eventoService.buscarEvento(convite.getIdEvento());
@@ -120,6 +122,27 @@ public class UserController {
 
 		return new MensagemRetorno("Usuario cadastrado");
 
+	}
+	
+	@RequestMapping(value = "/logarfacebook")
+	@ResponseBody
+	public AuthToken logar(@RequestBody FacebookDados facebookDados) throws AuthenticationException{
+		String keyFacebook = facebookDados.getKeyFacebook();
+		Usuario usuarioFacebook = usuarioService.getUsuarioKeyFacebook(keyFacebook);
+		
+		if(usuarioFacebook == null){
+			usuarioFacebook = new Usuario(facebookDados.getNome(), facebookDados.getFoto64(), keyFacebook, facebookDados.getEmail(), keyFacebook, Papel.USUARIO);
+			usuarioFacebook = usuarioService.salvarUsuario(usuarioFacebook);
+		}
+		
+		String JWT = Jwts.builder()
+				.setSubject(usuarioFacebook.getEmail())
+				.setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+				.signWith(SignatureAlgorithm.HS512, Constants.CHAVE_SECRETA)
+				.compact();
+		
+		return new AuthToken(Constants.TOKEN_PREFIX + " " + JWT);
+		
 	}
 	
 	@RequestMapping(value = "/resgatarqrcode",  method = RequestMethod.POST)
@@ -145,7 +168,7 @@ public class UserController {
 		if(atividade.getTipo() == TiposAtividades.CHECKIN && codigo.equals(atividade.getCodeCheckin())){
 			addCodigoCapturado(codigo, participacaoAtividade);
 			computarPontos(participacaoEvento, atividade);
-			return new MensagemResgate("Codigo resgatado, " + atividade.getPontuacao() + " pontos resgatados", participacaoEvento.getPontos());
+			return new MensagemResgate("Codigo resgatado, " + atividade.getPontuacao() + " pontos resgatados. Voce participou da atividade " + atividade.getNome(), participacaoEvento.getPontos());
 		} else if(atividade.getTipo() == TiposAtividades.CHECKIN_CHECKOUT){
 			if(codigo.equals(atividade.getCodeCheckin())){
 				addCodigoCapturado(codigo, participacaoAtividade);
@@ -155,7 +178,7 @@ public class UserController {
 					if(c.getCodigo().equals(atividade.getCodeCheckin())){
 						computarPontos(participacaoEvento, atividade);
 						addCodigoCapturado(codigo, participacaoAtividade);
-						return new MensagemResgate("Codigo resgatado, " + atividade.getPontuacao() + " pontos resgatados", participacaoEvento.getPontos());
+						return new MensagemResgate("Codigo resgatado, " + atividade.getPontuacao() + " pontos resgatados. Voce participou da atividade " + atividade.getNome(), participacaoEvento.getPontos());
 					}		
 				}
 				throw new CapturaException("Capture o codigo de checkin antes do codigo de checkout");

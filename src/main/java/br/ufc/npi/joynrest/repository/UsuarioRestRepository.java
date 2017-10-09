@@ -15,6 +15,8 @@ public interface UsuarioRestRepository extends JpaRepository<Usuario, Long> {
 
 	public Usuario findByEmail(String email);
 	
+	public Usuario findByKeyFacebook(String keyFacebook);
+	
 	@Override
 	@PreAuthorize("#usuario?.email != null and #usuario?.senha != null")
 	<S extends Usuario> S save(@Param("usuario") S usuario);
