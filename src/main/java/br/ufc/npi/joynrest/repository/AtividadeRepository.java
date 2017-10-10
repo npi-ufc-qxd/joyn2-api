@@ -25,7 +25,7 @@ public interface AtividadeRepository extends JpaRepository<Atividade, Long>{
 	@PreAuthorize("#atividade?.nome != null and #atividade?.vagas != null and #atividade?.dias != null and #atividade?.pontuacao != null")
 	void delete(@Param("atividade") Atividade atividade);
 	
-	@Query("from Atividade a where a.codeCheckin = ?1 or a.codeCheckout = ?1")
+	@Query("select ct.atividade from CodigosTurno ct where ct.codigoCheckin = ?1 or ct.codigoCheckout = ?1")
 	public Atividade atividadeCodigo(String code);
 }
 

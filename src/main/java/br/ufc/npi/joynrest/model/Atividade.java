@@ -1,5 +1,6 @@
 package br.ufc.npi.joynrest.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -38,15 +39,11 @@ public class Atividade {
 	@ManyToOne
 	private Evento evento;
 
-	@OneToMany
-	private List<HorarioAtividade> horarios;
+	@OneToMany(cascade=CascadeType.ALL)
+	private List<CodigosTurno> codigosTurno;
 
-	private String codeCheckin;
-	
-	private String codeCheckout;
-	
 	public Atividade() {
-		// TODO Auto-generated constructor stub
+		codigosTurno = new ArrayList<>();
 	}
 
 	public Long getId() {
@@ -137,28 +134,12 @@ public class Atividade {
 		this.evento = evento;
 	}
 
-	public List<HorarioAtividade> getHorarios() {
-		return horarios;
+	public List<CodigosTurno> getCodigosTurno() {
+		return codigosTurno;
 	}
 
-	public void setHorarios(List<HorarioAtividade> horarios) {
-		this.horarios = horarios;
-	}
-
-	public String getCodeCheckin() {
-		return codeCheckin;
-	}
-
-	public void setCodeCheckin(String codeCheckin) {
-		this.codeCheckin = codeCheckin;
-	}
-
-	public String getCodeCheckout() {
-		return codeCheckout;
-	}
-
-	public void setCodeCheckout(String codeCheckout) {
-		this.codeCheckout = codeCheckout;
+	public void setCodigosTurno(List<CodigosTurno> codigosTurno) {
+		this.codigosTurno = codigosTurno;
 	}
 
 }

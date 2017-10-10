@@ -18,15 +18,16 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import br.ufc.npi.joynrest.config.JwtEvaluator;
 import br.ufc.npi.joynrest.exceptions.CapturaException;
-import br.ufc.npi.joynrest.exceptions.TokenException;
 import br.ufc.npi.joynrest.model.AccountCredentials;
 import br.ufc.npi.joynrest.model.Atividade;
 import br.ufc.npi.joynrest.model.CodigoCapturado;
+import br.ufc.npi.joynrest.model.CodigosTurno;
 import br.ufc.npi.joynrest.model.Convite;
 import br.ufc.npi.joynrest.model.Evento;
 import br.ufc.npi.joynrest.model.Papel;
 import br.ufc.npi.joynrest.model.ParticipacaoAtividade;
 import br.ufc.npi.joynrest.model.ParticipacaoEvento;
+import br.ufc.npi.joynrest.model.TipoCodigo;
 import br.ufc.npi.joynrest.model.TiposAtividades;
 import br.ufc.npi.joynrest.model.Usuario;
 import br.ufc.npi.joynrest.response.AuthToken;
@@ -161,27 +162,45 @@ public class UserController {
 		
 		ParticipacaoEvento participacaoEvento = peService.getParticipacaoEvento(usuarioLogado.getId(), evento.getId());
 		
-		for(CodigoCapturado c : participacaoAtividade.getCodigos()){
+		for(CodigoCapturado c : participacaoAtividade.getCodigosCapturados()){
 			if(c.getCodigo().equals(codigo)) return new MensagemResgate("Esse codigo ja foi resgatado", participacaoEvento.getPontos());
 		}
 		
-		if(atividade.getTipo() == TiposAtividades.CHECKIN && codigo.equals(atividade.getCodeCheckin())){
-			addCodigoCapturado(codigo, participacaoAtividade);
-			computarPontos(participacaoEvento, atividade);
-			return new MensagemResgate("Codigo resgatado, " + atividade.getPontuacao() + " pontos resgatados. Voce participou da atividade " + atividade.getNome(), participacaoEvento.getPontos());
-		} else if(atividade.getTipo() == TiposAtividades.CHECKIN_CHECKOUT){
-			if(codigo.equals(atividade.getCodeCheckin())){
-				addCodigoCapturado(codigo, participacaoAtividade);
-				return new MensagemResgate("Codigo resgatado. Esperando codigo de checkout", participacaoEvento.getPontos());
-			} else if(codigo.equals(atividade.getCodeCheckout())){
-				for(CodigoCapturado c : participacaoAtividade.getCodigos()){
-					if(c.getCodigo().equals(atividade.getCodeCheckin())){
+		if(atividade.getTipo() == TiposAtividades.CHECKIN){
+			for(CodigosTurno cturno : atividade.getCodigosTurno()){
+				if(codigo.equals(cturno.getCodigoCheckin())){
+					addCodigoCapturado(codigo, participacaoAtividade, TipoCodigo.CHECKIN);
+					if(temMinFreqAtv(atividade, participacaoAtividade)){
 						computarPontos(participacaoEvento, atividade);
-						addCodigoCapturado(codigo, participacaoAtividade);
-						return new MensagemResgate("Codigo resgatado, " + atividade.getPontuacao() + " pontos resgatados. Voce participou da atividade " + atividade.getNome(), participacaoEvento.getPontos());
-					}		
+						return new MensagemResgate("Codigo resgatado, " + atividade.getPontuacao() + " pontos resgatados. Voce completou o minimo de frequencia para a atividade " + atividade.getNome(), participacaoEvento.getPontos());
+					}else{
+						return new MensagemResgate("Codigo resgatado", participacaoEvento.getPontos());
+					}
 				}
-				throw new CapturaException("Capture o codigo de checkin antes do codigo de checkout");
+			}
+		} 
+
+		
+		if(atividade.getTipo() == TiposAtividades.CHECKIN_CHECKOUT){
+			for(CodigosTurno cturno : atividade.getCodigosTurno()){
+				if(codigo.equals(cturno.getCodigoCheckin())){
+					addCodigoCapturado(codigo, participacaoAtividade, TipoCodigo.CHECKIN);
+					return new MensagemResgate("Codigo resgatado. Esperando codigo de checkout", participacaoEvento.getPontos());
+				} else if(codigo.equals(cturno.getCodigoCheckout())){
+					for(CodigoCapturado cc : participacaoAtividade.getCodigosCapturados()){
+						if(cc.getCodigo().equals(cturno.getCodigoCheckin())){
+							addCodigoCapturado(codigo, participacaoAtividade, TipoCodigo.CHECKOUT);
+							if(temMinFreqAtv(atividade, participacaoAtividade)){
+								computarPontos(participacaoEvento, atividade);
+								return new MensagemResgate("Codigo resgatado, " + atividade.getPontuacao() + " pontos resgatados. Voce completou o minimo de frequencia para a atividade " + atividade.getNome(), participacaoEvento.getPontos());
+							}else{
+								return new MensagemResgate("Codigo resgatado", participacaoEvento.getPontos());
+							}
+						}
+					}
+					
+					throw new CapturaException("Capture o codigo de checkin antes do codigo de checkout");
+				}
 			}
 		}
 		
@@ -189,11 +208,12 @@ public class UserController {
 		
 	}
 	
-	private void addCodigoCapturado(String codigo, ParticipacaoAtividade participacaoAtividade){
+	private void addCodigoCapturado(String codigo, ParticipacaoAtividade participacaoAtividade, TipoCodigo tipo){
 		CodigoCapturado codigoCapturado = new CodigoCapturado();
 		codigoCapturado.setAtividade(participacaoAtividade);
 		codigoCapturado.setCodigo(codigo);
-		participacaoAtividade.getCodigos().add(codigoCapturado);
+		codigoCapturado.setTipo(tipo);
+		participacaoAtividade.getCodigosCapturados().add(codigoCapturado);
 		codigoCapturadoService.salvar(codigoCapturado);
 		paService.atualizarParticipacaoAtividade(participacaoAtividade);
 	}
@@ -201,6 +221,19 @@ public class UserController {
 	private void computarPontos(ParticipacaoEvento participacaoEvento, Atividade atividade){
 		participacaoEvento.setPontos(participacaoEvento.getPontos() + atividade.getPontuacao());
 		peService.atualizarParticipacaoEvento(participacaoEvento);
+	}
+	
+	private boolean temMinFreqAtv(Atividade atividade, ParticipacaoAtividade pa){
+		if(atividade.getTipo() == TiposAtividades.CHECKIN){
+			return pa.getCodigosCapturados().size() == atividade.getMinimoParaFreq();
+		}else{
+			int qtCheckouts = 0;
+			for(CodigoCapturado cc : pa.getCodigosCapturados()){
+				if(cc.getTipo() == TipoCodigo.CHECKOUT)
+					qtCheckouts += 1;
+			}
+			return qtCheckouts == atividade.getMinimoParaFreq();
+		}
 	}
 	
 	@RequestMapping(value = "/testetoken",  method = RequestMethod.POST)
