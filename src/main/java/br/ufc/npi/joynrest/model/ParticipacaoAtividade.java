@@ -29,12 +29,12 @@ public class ParticipacaoAtividade {
 	private Papel papel;
 
 	@OneToMany
-	private List<CodigoCapturado> codigos;
+	private List<CodigoCapturado> codigosCapturados;
 		
 	private boolean status;
 
 	public ParticipacaoAtividade() {
-		codigos = new ArrayList<>();
+		codigosCapturados = new ArrayList<>();
 	}
 
 	public Long getId() {
@@ -69,12 +69,12 @@ public class ParticipacaoAtividade {
 		this.papel = papel;
 	}
 
-	public List<CodigoCapturado> getCodigos() {
-		return codigos;
+	public List<CodigoCapturado> getCodigosCapturados() {
+		return codigosCapturados;
 	}
 
-	public void setCodigos(List<CodigoCapturado> codigos) {
-		this.codigos = codigos;
+	public void setCodigosCapturados(List<CodigoCapturado> codigos) {
+		this.codigosCapturados = codigos;
 	}
 
 	public boolean isStatus() {
