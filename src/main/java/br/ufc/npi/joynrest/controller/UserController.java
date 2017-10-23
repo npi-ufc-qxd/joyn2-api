@@ -136,9 +136,6 @@ public class UserController {
 		if(usuarioFacebook == null){
 			usuarioFacebook = new Usuario(facebookDados.getNome(), facebookDados.getFoto64(), keyFacebook, facebookDados.getEmail(), keyFacebook, Papel.USUARIO);
 			usuarioFacebook = usuarioService.salvarUsuario(usuarioFacebook);
-		}else{
-			if(!usuarioFacebook.getNome().equals(facebookDados.getNome()) || !usuarioFacebook.getEmail().equals(facebookDados.getEmail()))
-				throw new AuthenticationException("Dados incorretos");
 		}
 		
 		String JWT = Jwts.builder()
