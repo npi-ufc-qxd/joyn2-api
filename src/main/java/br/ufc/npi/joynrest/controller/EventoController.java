@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.ufc.npi.joynrest.model.Evento;
+import br.ufc.npi.joynrest.model.Papel;
 import br.ufc.npi.joynrest.model.ParticipacaoEvento;
 import br.ufc.npi.joynrest.response.ItemRanking;
 import br.ufc.npi.joynrest.service.EventoService;
@@ -29,7 +30,8 @@ public class EventoController {
 		
 		List<ItemRanking> ranking = new ArrayList<>();
 		for(ParticipacaoEvento pe : evento.getParticipantes()){
-			ranking.add(new ItemRanking(pe.getUsuario().getNome(), pe.getPontos()));
+			if(pe.getPapel() == Papel.PARTICIPANTE)
+				ranking.add(new ItemRanking(pe.getUsuario().getNome(), pe.getPontos()));
 		}
 		
 		Collections.sort(ranking, new Comparator<ItemRanking>() {

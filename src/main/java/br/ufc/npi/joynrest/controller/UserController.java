@@ -121,7 +121,7 @@ public class UserController {
 			peService.addParticipacaoEvento(pe);
 		}
 
-		return new MensagemRetorno("Usuario cadastrado");
+		return new MensagemRetorno("Usuário cadastrado");
 
 	}
 	
@@ -130,15 +130,17 @@ public class UserController {
 	public AuthToken logar(@RequestBody FacebookDados facebookDados) throws AuthenticationException{
 		String keyFacebook = facebookDados.getKeyFacebook();
 		
-		if(keyFacebook == null) throw new AuthenticationException("Chave do facebook nula");
+		if(keyFacebook == null || keyFacebook.isEmpty()) throw new AuthenticationException("Chave do Facebook nula");
 		
 		Usuario usuarioFacebook = usuarioService.getUsuarioKeyFacebook(keyFacebook);
 		if(usuarioFacebook == null){
-			usuarioFacebook = new Usuario(facebookDados.getNome(), facebookDados.getFoto64(), keyFacebook, facebookDados.getEmail(), keyFacebook, Papel.USUARIO);
-			usuarioFacebook = usuarioService.salvarUsuario(usuarioFacebook);
-		}else{
-			if(!usuarioFacebook.getNome().equals(facebookDados.getNome()) || !usuarioFacebook.getEmail().equals(facebookDados.getEmail()))
-				throw new AuthenticationException("Dados incorretos");
+			Usuario usuarioBase = usuarioService.getUsuario(facebookDados.getEmail());
+			if(usuarioBase == null){
+				usuarioFacebook = new Usuario(facebookDados.getNome(), facebookDados.getFoto64(), keyFacebook, facebookDados.getEmail(), keyFacebook, Papel.USUARIO);
+				usuarioFacebook = usuarioService.salvarUsuario(usuarioFacebook);
+			}else{
+				throw new AuthenticationException("O email do Facebook já está cadastrado");
+			}
 		}
 		
 		String JWT = Jwts.builder()
@@ -168,7 +170,7 @@ public class UserController {
 		ParticipacaoEvento participacaoEvento = peService.getParticipacaoEvento(usuarioLogado.getId(), evento.getId());
 		
 		for(CodigoCapturado c : participacaoAtividade.getCodigosCapturados()){
-			if(c.getCodigo().equals(codigo)) return new MensagemResgate("Esse codigo ja foi resgatado", participacaoEvento.getPontos());
+			if(c.getCodigo().equals(codigo)) return new MensagemResgate("Esse código já foi resgatado", participacaoEvento.getPontos());
 		}
 		
 		if(atividade.getTipo() == TiposAtividades.CHECKIN){
@@ -177,9 +179,9 @@ public class UserController {
 					addCodigoCapturado(codigo, participacaoAtividade, TipoCodigo.CHECKIN);
 					if(temMinFreqAtv(atividade, participacaoAtividade)){
 						computarPontos(participacaoEvento, atividade);
-						return new MensagemResgate("Codigo resgatado, " + atividade.getPontuacao() + " pontos resgatados. Voce completou o minimo de frequencia para a atividade " + atividade.getNome(), participacaoEvento.getPontos());
+						return new MensagemResgate("Código resgatado, " + atividade.getPontuacao() + " pontos resgatados. Você completou o mínimo de frequência para a atividade " + atividade.getNome(), participacaoEvento.getPontos());
 					}else{
-						return new MensagemResgate("Codigo resgatado", participacaoEvento.getPontos());
+						return new MensagemResgate("Código resgatado", participacaoEvento.getPontos());
 					}
 				}
 			}
@@ -190,26 +192,26 @@ public class UserController {
 			for(CodigosTurno cturno : atividade.getCodigosTurno()){
 				if(codigo.equals(cturno.getCodigoCheckin())){
 					addCodigoCapturado(codigo, participacaoAtividade, TipoCodigo.CHECKIN);
-					return new MensagemResgate("Codigo resgatado. Esperando codigo de checkout", participacaoEvento.getPontos());
+					return new MensagemResgate("Código resgatado. Esperando código de checkout", participacaoEvento.getPontos());
 				} else if(codigo.equals(cturno.getCodigoCheckout())){
 					for(CodigoCapturado cc : participacaoAtividade.getCodigosCapturados()){
 						if(cc.getCodigo().equals(cturno.getCodigoCheckin())){
 							addCodigoCapturado(codigo, participacaoAtividade, TipoCodigo.CHECKOUT);
 							if(temMinFreqAtv(atividade, participacaoAtividade)){
 								computarPontos(participacaoEvento, atividade);
-								return new MensagemResgate("Codigo resgatado, " + atividade.getPontuacao() + " pontos resgatados. Voce completou o minimo de frequencia para a atividade " + atividade.getNome(), participacaoEvento.getPontos());
+								return new MensagemResgate("Código resgatado, " + atividade.getPontuacao() + " pontos resgatados. Você completou o mínimo de frequência para a atividade " + atividade.getNome(), participacaoEvento.getPontos());
 							}else{
-								return new MensagemResgate("Codigo resgatado", participacaoEvento.getPontos());
+								return new MensagemResgate("Código resgatado", participacaoEvento.getPontos());
 							}
 						}
 					}
 					
-					throw new CapturaException("Capture o codigo de checkin antes do codigo de checkout");
+					throw new CapturaException("Capture o código de checkin antes do código de checkout");
 				}
 			}
 		}
 		
-		throw new BadRequestException("Codigo invalido");
+		throw new BadRequestException("Código invalido");
 		
 	}
 	
