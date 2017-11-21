@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import br.ufc.npi.joynrest.model.Atividade;
 import br.ufc.npi.joynrest.model.Papel;
 import br.ufc.npi.joynrest.model.ParticipacaoAtividade;
-import br.ufc.npi.joynrest.model.ParticipacaoEvento;
 import br.ufc.npi.joynrest.model.Usuario;
 import br.ufc.npi.joynrest.repository.ParticipacaoAtividadeRepository;
 
@@ -46,9 +45,6 @@ public class ParticipacaoAtividadeService {
 		atividade.getParticipantes().add(paSalvo);
 		usuarioService.atualizaUsuario(usuario);
 		atividadeService.salvarAtividade(atividade);
-		if(participacaoEvento.verificarParticipacaoEvento(usuario, atividade.getEvento()) == false){
-			participacaoEvento.addParticipacaoEvento(new ParticipacaoEvento(usuario, atividade.getEvento(), Papel.PARTICIPANTE, true));
-		}
 		return paSalvo; 
 	}
 	
@@ -69,12 +65,7 @@ public class ParticipacaoAtividadeService {
 	}
 	
 	public boolean verificarParticipacaoAtividade(Usuario usuario, Atividade atividade){
-		for (ParticipacaoAtividade participacaoAtividade : atividade.getParticipantes()) {
-			if(usuario.getId() == participacaoAtividade.getUsuario().getId()){
-				return true;
-			}
-		}
-		return false;
+		return getParticipacaoAtividade(usuario.getId(), atividade.getId()) != null;
 	}
 
 }

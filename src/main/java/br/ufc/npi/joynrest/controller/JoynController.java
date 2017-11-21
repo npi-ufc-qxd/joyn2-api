@@ -164,18 +164,11 @@ public class JoynController {
 		Atividade atividade = atividadeService.getAtividade(codigo);
 		Evento evento = atividade.getEvento();
 		Usuario usuarioLogado = jwtEvaluator.usuarioToken();
-		ParticipacaoAtividade participacaoAtividade = null;
+		ParticipacaoAtividade participacaoAtividade = recuperarParticipacaoAtividade(usuarioLogado, atividade);
+		ParticipacaoEvento participacaoEvento = recuperarParticipacaoEvento(usuarioLogado, evento);
 		
-		if(paService.verificarParticipacaoAtividade(usuarioLogado, atividade) == false)
-			participacaoAtividade = paService.adicionarAtividade(usuarioLogado, atividade, Papel.PARTICIPANTE);
-		else
-			participacaoAtividade = paService.getParticipacaoAtividade(usuarioLogado.getId(), atividade.getId());
-		
-		ParticipacaoEvento participacaoEvento = peService.getParticipacaoEvento(usuarioLogado.getId(), evento.getId());
-		
-		for(CodigoCapturado c : participacaoAtividade.getCodigosCapturados()){
-			if(c.getCodigo().equals(codigo)) return new MensagemResgate("Esse código já foi resgatado", participacaoEvento.getPontos());
-		}
+		if(codigoJaCapturado(participacaoAtividade, codigo))
+			return new MensagemResgate("Esse código já foi resgatado", participacaoEvento.getPontos());
 		
 		if(atividade.getTipo() == TiposAtividades.CHECKIN){
 			for(CodigosTurno cturno : atividade.getCodigosTurno()){
@@ -217,6 +210,27 @@ public class JoynController {
 		
 		throw new BadRequestException("Código invalido");
 		
+	}
+	
+	private ParticipacaoAtividade recuperarParticipacaoAtividade(Usuario usuario, Atividade atividade){
+		if(paService.verificarParticipacaoAtividade(usuario, atividade) == false)
+			return paService.adicionarAtividade(usuario, atividade, Papel.PARTICIPANTE);
+		else
+			return paService.getParticipacaoAtividade(usuario.getId(), atividade.getId());
+	}
+	
+	private ParticipacaoEvento recuperarParticipacaoEvento(Usuario usuario, Evento evento){
+		if(peService.verificarParticipacaoEvento(usuario, evento) == false)
+			return peService.addParticipacaoEvento(new ParticipacaoEvento(usuario, evento, Papel.PARTICIPANTE, true));
+		else
+			return peService.getParticipacaoEvento(usuario.getId(), evento.getId());
+	}
+	
+	private boolean codigoJaCapturado(ParticipacaoAtividade participacaoAtividade, String codigo){
+		for(CodigoCapturado c : participacaoAtividade.getCodigosCapturados()){
+			if(c.getCodigo().equals(codigo)) return true;
+		}
+		return false;
 	}
 	
 	private void addCodigoCapturado(String codigo, ParticipacaoAtividade participacaoAtividade, TipoCodigo tipo){
