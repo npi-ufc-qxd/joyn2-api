@@ -1,7 +1,10 @@
 package br.ufc.npi.joynrest.controller;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 
 import javax.security.sasl.AuthenticationException;
 import javax.servlet.ServletException;
@@ -32,6 +35,7 @@ import br.ufc.npi.joynrest.model.TiposAtividades;
 import br.ufc.npi.joynrest.model.Usuario;
 import br.ufc.npi.joynrest.response.AuthToken;
 import br.ufc.npi.joynrest.response.FacebookDados;
+import br.ufc.npi.joynrest.response.ItemRanking;
 import br.ufc.npi.joynrest.response.MensagemResgate;
 import br.ufc.npi.joynrest.response.MensagemRetorno;
 import br.ufc.npi.joynrest.response.QrCode;
@@ -50,7 +54,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.undertow.util.BadRequestException;
 
 @RestController
-public class UserController {
+public class JoynController {
 
 	@Autowired
 	UsuarioService usuarioService;
@@ -258,6 +262,33 @@ public class UserController {
         }
         
         throw new BadRequestException("Token invalido");
+	}
+	
+	@RequestMapping(value = "/ranking/{eventoId}")
+	@ResponseBody
+	public List<ItemRanking> gerarRanking(@PathVariable Long eventoId){
+		Evento evento = eventoService.buscarEvento(eventoId);
+		
+		List<ItemRanking> ranking = new ArrayList<>();
+		for(ParticipacaoEvento pe : evento.getParticipantes()){
+			if(pe.getPapel() == Papel.PARTICIPANTE)
+				ranking.add(new ItemRanking(pe.getUsuario().getNome(), pe.getPontos()));
+		}
+		
+		Collections.sort(ranking, new Comparator<ItemRanking>() {
+	        @Override
+	        public int compare(ItemRanking item2, ItemRanking item1)
+	        {
+	            if (item2.getPontos() > item1.getPontos()) return -1;
+	            else if (item2.getPontos() < item1.getPontos()) return 1;
+	            else return 0;
+	        }
+	    });
+		
+		for(int i = 0; i < ranking.size(); i++)
+			ranking.get(i).setColocacao(i+1);
+		
+		return ranking;
 	}
 	
 }
