@@ -42,11 +42,6 @@ public class ParticipacaoEventoService {
 	}
 	
 	public boolean verificarParticipacaoEvento(Usuario usuario, Evento evento){
-		for (ParticipacaoEvento participacaoEvento : evento.getParticipantes()) {
-			if(usuario.getId() == participacaoEvento.getUsuario().getId()){
-				return true;
-			}
-		}
-		return false;
+		return getParticipacaoEvento(usuario.getId(), evento.getId()) != null;
 	}
 }
